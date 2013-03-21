@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -62,15 +63,18 @@ namespace VSTest.TeamCityLogger
         /// </summary>
         private void TestResultHandler(object sender, TestResultEventArgs e)
         {
-            if (_currentAssembly != e.Result.TestCase.Source)
+            var currentAssembly = Path.GetFileName(e.Result.TestCase.Source);
+            if (_currentAssembly != currentAssembly)
             {
                 if (!string.IsNullOrEmpty(_currentAssembly))
                     Console.WriteLine("##teamcity[testSuiteFinished name='{0}']", _currentAssembly);
 
-                Console.WriteLine("##teamcity[testSuiteStarted name='{0}']", e.Result.TestCase.Source);
+                _currentAssembly = currentAssembly;
+
+                Console.WriteLine("##teamcity[testSuiteStarted name='{0}']", currentAssembly);
             }
 
-            string name = e.Result.TestCase.FullyQualifiedName;
+            string name = e.Result.TestCase.FullyQualifiedName.Replace(e.Result.TestCase.DisplayName, e.Result.DisplayName);
 
             Console.WriteLine("##teamcity[testStarted name='{0}' captureStandardOutput='false']", name);
 
