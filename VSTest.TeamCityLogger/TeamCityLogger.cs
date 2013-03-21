@@ -12,6 +12,7 @@ namespace VSTest.TeamCityLogger
         private readonly string _x;
         private readonly string _l;
         private readonly string _p;
+        private string _currentAssembly;
 
         public TeamCityLogger()
         {
@@ -32,7 +33,7 @@ namespace VSTest.TeamCityLogger
             events.TestResult += TestResultHandler;
             events.TestRunComplete += TestRunCompleteHandler;
 
-            Console.WriteLine("##teamcity[testSuiteStarted name='suite.name']");
+            Console.WriteLine("##teamcity[testSuiteStarted name='VSTest']");
         }
 
         /// <summary>
@@ -61,9 +62,17 @@ namespace VSTest.TeamCityLogger
         /// </summary>
         private void TestResultHandler(object sender, TestResultEventArgs e)
         {
+            if (_currentAssembly != e.Result.TestCase.Source)
+            {
+                if (!string.IsNullOrEmpty(_currentAssembly))
+                    Console.WriteLine("##teamcity[testSuiteFinished name='{0}']", _currentAssembly);
+
+                Console.WriteLine("##teamcity[testSuiteStarted name='{0}']", e.Result.TestCase.Source);
+            }
+
             string name = e.Result.TestCase.FullyQualifiedName;
 
-            Console.WriteLine("##teamcity[testStarted name='{0}']", name);
+            Console.WriteLine("##teamcity[testStarted name='{0}' captureStandardOutput='false']", name);
 
             if (e.Result.Outcome == TestOutcome.Skipped)
             {
@@ -76,7 +85,6 @@ namespace VSTest.TeamCityLogger
             }
             else if (e.Result.Outcome == TestOutcome.Passed)
             {
-                //// do nothing
             }
 
             Console.WriteLine("##teamcity[testFinished name='{0}' duration='{1}']", name, e.Result.Duration.TotalMilliseconds);
@@ -106,7 +114,8 @@ namespace VSTest.TeamCityLogger
             Console.WriteLine("Total Failed: {0}", e.TestRunStatistics[TestOutcome.Failed]);
             Console.WriteLine("Total Skipped: {0}", e.TestRunStatistics[TestOutcome.Skipped]);
 
-            Console.WriteLine("##teamcity[testSuiteFinished name='suite.name']");
+            Console.WriteLine("##teamcity[testSuiteFinished name='{0}']", _currentAssembly);
+            Console.WriteLine("##teamcity[testSuiteFinished name='VSTest']");
         }
     }
 }
