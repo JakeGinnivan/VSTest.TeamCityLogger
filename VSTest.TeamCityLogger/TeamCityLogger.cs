@@ -96,6 +96,9 @@ namespace VSTest.TeamCityLogger
 
         private string FormatForTeamCity(string errorStackTrace)
         {
+            if (errorStackTrace == null)
+                return null;
+
             return errorStackTrace
                 .Replace("\r", "|r")
                 .Replace("\n", "|n")
@@ -113,13 +116,13 @@ namespace VSTest.TeamCityLogger
         /// </summary>
         private void TestRunCompleteHandler(object sender, TestRunCompleteEventArgs e)
         {
+            Console.WriteLine("##teamcity[testSuiteFinished name='{0}']", _currentAssembly);
+            Console.WriteLine("##teamcity[testSuiteFinished name='VSTest']");
+
             Console.WriteLine("Total Executed: {0}", e.TestRunStatistics.ExecutedTests);
             Console.WriteLine("Total Passed: {0}", e.TestRunStatistics[TestOutcome.Passed]);
             Console.WriteLine("Total Failed: {0}", e.TestRunStatistics[TestOutcome.Failed]);
             Console.WriteLine("Total Skipped: {0}", e.TestRunStatistics[TestOutcome.Skipped]);
-
-            Console.WriteLine("##teamcity[testSuiteFinished name='{0}']", _currentAssembly);
-            Console.WriteLine("##teamcity[testSuiteFinished name='VSTest']");
         }
     }
 }
