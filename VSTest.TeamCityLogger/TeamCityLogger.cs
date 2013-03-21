@@ -9,6 +9,17 @@ namespace VSTest.TeamCityLogger
     [FriendlyName("TeamCityLogger")]
     public class TeamCityLogger : ITestLogger
     {
+        private readonly string _x;
+        private readonly string _l;
+        private readonly string _p;
+
+        public TeamCityLogger()
+        {
+            _x = '\u0085'.ToString();
+            _p = '\u2029'.ToString();
+            _l = '\u2028'.ToString();
+        }
+
         /// <summary>
         /// Initializes the Test Logger.
         /// </summary>
@@ -56,11 +67,12 @@ namespace VSTest.TeamCityLogger
 
             if (e.Result.Outcome == TestOutcome.Skipped)
             {
-                Console.WriteLine("##teamcity[testIgnored name='{0}' message='{1}']", name, e.Result.ErrorMessage);
+                Console.WriteLine("##teamcity[testIgnored name='{0}' message='{1}']", name, FormatForTeamCity(e.Result.ErrorMessage));
             }
             else if (e.Result.Outcome == TestOutcome.Failed)
             {
-                Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}' details='{2}']", name, e.Result.ErrorMessage, e.Result.ErrorStackTrace);
+                var errorStackTrace = FormatForTeamCity(e.Result.ErrorStackTrace);
+                Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}' details='{2}']", name, FormatForTeamCity(e.Result.ErrorMessage), errorStackTrace);
             }
             else if (e.Result.Outcome == TestOutcome.Passed)
             {
@@ -68,6 +80,20 @@ namespace VSTest.TeamCityLogger
             }
 
             Console.WriteLine("##teamcity[testFinished name='{0}' duration='{1}']", name, e.Result.Duration.TotalMilliseconds);
+        }
+
+        private string FormatForTeamCity(string errorStackTrace)
+        {
+            return errorStackTrace
+                .Replace("\r", "|r")
+                .Replace("\n", "|n")
+                .Replace("'", "|'")
+                .Replace(_x, "|x")
+                .Replace(_l, "|l")
+                .Replace(_p, "|p")
+                .Replace("|", "||")
+                .Replace("[", "|[")
+                .Replace("]", "|]");
         }
 
         /// <summary>
