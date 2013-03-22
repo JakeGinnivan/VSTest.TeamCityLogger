@@ -10,17 +10,10 @@ namespace VSTest.TeamCityLogger
     [FriendlyName("TeamCityLogger")]
     public class TeamCityLogger : ITestLogger
     {
-        private readonly string _x;
-        private readonly string _l;
-        private readonly string _p;
+        private static readonly string X = '\u0085'.ToString();
+        private static readonly string L = '\u2029'.ToString();
+        private static readonly string P = '\u2028'.ToString();
         private string _currentAssembly;
-
-        public TeamCityLogger()
-        {
-            _x = '\u0085'.ToString();
-            _p = '\u2029'.ToString();
-            _l = '\u2028'.ToString();
-        }
 
         /// <summary>
         /// Initializes the Test Logger.
@@ -108,7 +101,7 @@ namespace VSTest.TeamCityLogger
             }
         }
 
-        private string FormatForTeamCity(string errorStackTrace)
+        private static string FormatForTeamCity(string errorStackTrace)
         {
             if (errorStackTrace == null)
                 return null;
@@ -117,9 +110,9 @@ namespace VSTest.TeamCityLogger
                 .Replace("\r", "|r")
                 .Replace("\n", "|n")
                 .Replace("'", "|'")
-                .Replace(_x, "|x")
-                .Replace(_l, "|l")
-                .Replace(_p, "|p")
+                .Replace(X, "|x")
+                .Replace(L, "|l")
+                .Replace(P, "|p")
                 .Replace("|", "||")
                 .Replace("[", "|[")
                 .Replace("]", "|]");
