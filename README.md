@@ -9,7 +9,7 @@ Put VSTest.TeamCityLogger into `C:\Program Files (x86)\Microsoft Visual Studio 1
 
     vstest.console.exe tests.dll /logger:TeamCityLogger
 
-    or if you want a .trx file as well
+or if you want a .trx file as well
 
     vstest.console.exe tests.dll /logger:TeamCityAndTrxLogger
 
