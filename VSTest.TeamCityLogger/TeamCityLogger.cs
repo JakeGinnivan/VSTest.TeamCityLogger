@@ -63,35 +63,42 @@ namespace VSTest.TeamCityLogger
         /// </summary>
         private void TestResultHandler(object sender, TestResultEventArgs e)
         {
-            var currentAssembly = Path.GetFileName(e.Result.TestCase.Source);
-            if (_currentAssembly != currentAssembly)
+            try
             {
-                if (!string.IsNullOrEmpty(_currentAssembly))
-                    Console.WriteLine("##teamcity[testSuiteFinished name='{0}']", _currentAssembly);
+                var currentAssembly = Path.GetFileName(e.Result.TestCase.Source);
+                if (_currentAssembly != currentAssembly)
+                {
+                    if (!string.IsNullOrEmpty(_currentAssembly))
+                        Console.WriteLine("##teamcity[testSuiteFinished name='{0}']", _currentAssembly);
 
-                _currentAssembly = currentAssembly;
+                    _currentAssembly = currentAssembly;
 
-                Console.WriteLine("##teamcity[testSuiteStarted name='{0}']", currentAssembly);
+                    Console.WriteLine("##teamcity[testSuiteStarted name='{0}']", currentAssembly);
+                }
+
+                string name = e.Result.TestCase.FullyQualifiedName.Replace(e.Result.TestCase.DisplayName, e.Result.DisplayName);
+
+                Console.WriteLine("##teamcity[testStarted name='{0}' captureStandardOutput='true']", name);
+
+                if (e.Result.Outcome == TestOutcome.Skipped)
+                {
+                    Console.WriteLine("##teamcity[testIgnored name='{0}' message='{1}']", name, FormatForTeamCity(e.Result.ErrorMessage));
+                }
+                else if (e.Result.Outcome == TestOutcome.Failed)
+                {
+                    var errorStackTrace = FormatForTeamCity(e.Result.ErrorStackTrace);
+                    Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}' details='{2}']", name, FormatForTeamCity(e.Result.ErrorMessage), errorStackTrace);
+                }
+                else if (e.Result.Outcome == TestOutcome.Passed)
+                {
+                }
+
+                Console.WriteLine("##teamcity[testFinished name='{0}' duration='{1}']", name, e.Result.Duration.TotalMilliseconds);
             }
-
-            string name = e.Result.TestCase.FullyQualifiedName.Replace(e.Result.TestCase.DisplayName, e.Result.DisplayName);
-
-            Console.WriteLine("##teamcity[testStarted name='{0}' captureStandardOutput='false']", name);
-
-            if (e.Result.Outcome == TestOutcome.Skipped)
+            catch (Exception ex)
             {
-                Console.WriteLine("##teamcity[testIgnored name='{0}' message='{1}']", name, FormatForTeamCity(e.Result.ErrorMessage));
+                Console.WriteLine("##teamcity[message text='TeamCity Logger Error' errorDetails='{0}' status='ERROR']", FormatForTeamCity(ex.ToString()));
             }
-            else if (e.Result.Outcome == TestOutcome.Failed)
-            {
-                var errorStackTrace = FormatForTeamCity(e.Result.ErrorStackTrace);
-                Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}' details='{2}']", name, FormatForTeamCity(e.Result.ErrorMessage), errorStackTrace);
-            }
-            else if (e.Result.Outcome == TestOutcome.Passed)
-            {
-            }
-
-            Console.WriteLine("##teamcity[testFinished name='{0}' duration='{1}']", name, e.Result.Duration.TotalMilliseconds);
         }
 
         private string FormatForTeamCity(string errorStackTrace)
