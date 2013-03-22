@@ -42,19 +42,26 @@ namespace VSTest.TeamCityLogger
         /// </summary>
         private static void TestMessageHandler(object sender, TestRunMessageEventArgs e)
         {
-            switch (e.Level)
+            try
             {
-                case TestMessageLevel.Informational:
-                    Console.WriteLine("Information: " + e.Message);
-                    break;
+                switch (e.Level)
+                {
+                    case TestMessageLevel.Informational:
+                        Console.WriteLine("Information: " + e.Message);
+                        break;
 
-                case TestMessageLevel.Warning:
-                    Console.WriteLine("Warning: " + e.Message);
-                    break;
+                    case TestMessageLevel.Warning:
+                        Console.WriteLine("Warning: " + e.Message);
+                        break;
 
-                case TestMessageLevel.Error:
-                    Console.WriteLine("Error: " + e.Message);
-                    break;
+                    case TestMessageLevel.Error:
+                        Console.WriteLine("Error: " + e.Message);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("##teamcity[message text='TeamCity Logger Error' errorDetails='{0}' status='ERROR']", FormatForTeamCity(ex.ToString()));
             }
         }
 
