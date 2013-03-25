@@ -107,13 +107,13 @@ namespace VSTest.TeamCityLogger
                 return null;
 
             return errorStackTrace
+                .Replace("|", "||")
                 .Replace("\r", "|r")
                 .Replace("\n", "|n")
                 .Replace("'", "|'")
                 .Replace(X, "|x")
                 .Replace(L, "|l")
                 .Replace(P, "|p")
-                .Replace("|", "||")
                 .Replace("[", "|[")
                 .Replace("]", "|]");
         }
