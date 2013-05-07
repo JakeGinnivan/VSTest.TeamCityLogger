@@ -76,7 +76,7 @@ namespace VSTest.TeamCityLogger
                     Console.WriteLine("##teamcity[testSuiteStarted name='{0}']", currentAssembly);
                 }
 
-                string name = e.Result.TestCase.FullyQualifiedName.Replace(e.Result.TestCase.DisplayName, e.Result.DisplayName);
+                string name = e.Result.TestCase.FullyQualifiedName;
 
                 Console.WriteLine("##teamcity[testStarted name='{0}' captureStandardOutput='true']", name);
 
