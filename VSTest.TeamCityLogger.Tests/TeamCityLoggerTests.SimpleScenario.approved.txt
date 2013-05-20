@@ -1,0 +1,14 @@
+﻿##teamcity[testSuiteStarted name='VSTest']
+##teamcity[testSuiteStarted name='TestAssembly1.dll']
+##teamcity[testStarted name='Test.FullyQualified.Name' captureStandardOutput='false']
+##teamcity[testFinished name='Test.FullyQualified.Name' duration='0']
+##teamcity[testSuiteFinished name='TestAssembly1.dll']
+##teamcity[testSuiteStarted name='TestAssembly2.dll']
+##teamcity[testStarted name='Test.FullyQualified.Name2' captureStandardOutput='false']
+##teamcity[testFinished name='Test.FullyQualified.Name2' duration='0']
+##teamcity[testSuiteFinished name='TestAssembly2.dll']
+##teamcity[testSuiteFinished name='VSTest']
+Total Executed: 0
+Total Passed: 0
+Total Failed: 0
+Total Skipped: 0
