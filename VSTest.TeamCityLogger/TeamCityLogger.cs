@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 namespace VSTest.TeamCityLogger
 {
     [ExtensionUri("logger://TeamCityLogger")]
-    [FriendlyName("TeamCityLogger")]
+    [FriendlyName("TeamCity")]
     public class TeamCityLogger : ITestLogger
     {
         private string _currentAssembly;
