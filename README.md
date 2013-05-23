@@ -11,11 +11,15 @@ Put VSTest.TeamCityLogger into `C:\Program Files (x86)\Microsoft Visual Studio 1
 
     vstest.console.exe tests.dll /logger:TeamCity
 
-If you would like to use another logger in conjunction with the TeamCityLogger you can use the MulticastLogger
+If you would like to use another logger in conjunction with the TeamCityLogger you can use the MulticastLogger!
 
-    vstest.console.exe tests.dll /logger:Multicast;logger1=TeamCity;logger2=TfsPublisher;logger2.Collection=<team project url>;logger2.BuildName=<build name>;logger2.TeamProject=<team project name>;
+Simply comma separate the loggers in `loggers` parameter, if any of the loggers have parameters you can use `LoggerName.ParameterName` to set the `ParameterName` parameter. For example:
 
-The convention is that you use logger1, logger2 etc, then if that logger takes parameters, use LoggerKey.LoggerParameter. i.e logger1.AParameter, or logger2.SomeParameter
+    vstest.console.exe tests.dll /logger:Multicast;loggers=TeamCity,trx,TfsPublisher;TfsPublisher.Collection=<team project url>;TfsPublisher.BuildName=<build name>;TfsPublisher.TeamProject=<team project name>;
+
+You may also alias loggers, then you can set parameters on the aliases:
+
+    vstest.console.exe tests.dll /logger:Multicast;logger1=TeamCity;logger2=trx;logger3=TfsPublisher;logger3.Collection=<team project url>;logger3.BuildName=<build name>;logger3.TeamProject=<team project name>;
 
 ## Download
 You can grab the extension straight off the build server:
