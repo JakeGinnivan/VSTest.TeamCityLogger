@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="6705ec90-27ba-44e6-afac-86cdbae0fa52" Version="1.0.2" Language="en-US" Publisher="Jake Ginnivan" />
+    <DisplayName>TeamCity Test Logger For VS2012</DisplayName>
+    <Description>This TeamCity logger allows VSTest.Console.exe test output to be picked up by TeamCity. It also supports multicast logging, so you can log to multiple loggers at once</Description>
+    <MoreInfo>https://github.com/JakeGinnivan/VSTest.TeamCityLogger</MoreInfo>
+    <GettingStartedGuide>https://github.com/JakeGinnivan/VSTest.TeamCityLogger</GettingStartedGuide>
+    <Icon>TeamCity48.ico</Icon>
+    <Tags>TeamCity, VSTest</Tags>
+  </Metadata>
+  <Installation InstalledByMsi="false">
+    <InstallationTarget Id="Microsoft.VisualStudio.IntegratedShell" Version="11.0" />
+  </Installation>
+  <Dependencies>
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="4.5" />
+    <Dependency Id="Microsoft.VisualStudio.MPF.11.0" DisplayName="Visual Studio MPF 11.0" d:Source="Installed" Version="11.0" />
+  </Dependencies>
+  <Assets>
+    <Asset d:Source="Project" d:ProjectName="VSTest.TeamCityLogger" Type="UnitTestExtension" Path="|VSTest.TeamCityLogger|" />
+  </Assets>
+</PackageManifest>
