@@ -45,7 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TeamCityAndTrxLogger.cs" />
+    <Compile Include="MulticastLogger.cs" />
+    <Compile Include="PossibleLogger.cs" />
     <Compile Include="TeamCityLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
