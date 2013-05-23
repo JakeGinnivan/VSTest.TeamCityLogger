@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using JetBrains.TeamCity.ServiceMessages.Write.Special;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -10,10 +12,15 @@ namespace VSTest.TeamCityLogger
     [FriendlyName("TeamCityLogger")]
     public class TeamCityLogger : ITestLogger
     {
-        private static readonly string X = '\u0085'.ToString();
-        private static readonly string L = '\u2029'.ToString();
-        private static readonly string P = '\u2028'.ToString();
         private string _currentAssembly;
+        private ITeamCityWriter _teamCityWriter;
+        private ITeamCityTestsSubWriter _vsTestSuite;
+        private ITeamCityTestsSubWriter _currentAssemblySuite;
+
+        public TeamCityLogger()
+        {
+            Trace.Listeners.Add(new ConsoleTraceListener());
+        }
 
         /// <summary>
         /// Initializes the Test Logger.
@@ -27,34 +34,33 @@ namespace VSTest.TeamCityLogger
             events.TestResult += TestResultHandler;
             events.TestRunComplete += TestRunCompleteHandler;
 
-            Console.WriteLine("##teamcity[testSuiteStarted name='VSTest']");
+            _teamCityWriter = new TeamCityServiceMessages().CreateWriter(w => Trace.WriteLine(w));
+            _vsTestSuite = _teamCityWriter.OpenTestSuite("VSTest");
         }
 
         /// <summary>
         /// Called when a test message is received.
         /// </summary>
-        private static void TestMessageHandler(object sender, TestRunMessageEventArgs e)
+        private void TestMessageHandler(object sender, TestRunMessageEventArgs e)
         {
             try
             {
                 switch (e.Level)
                 {
                     case TestMessageLevel.Informational:
-                        Console.WriteLine("Information: " + e.Message);
+                        _teamCityWriter.WriteMessage(e.Message);
                         break;
-
                     case TestMessageLevel.Warning:
-                        Console.WriteLine("Warning: " + e.Message);
+                        _teamCityWriter.WriteWarning(e.Message);
                         break;
-
                     case TestMessageLevel.Error:
-                        Console.WriteLine("Error: " + e.Message);
+                        _teamCityWriter.WriteError(e.Message);
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("##teamcity[message text='TeamCity Logger Error' errorDetails='{0}' status='ERROR']", FormatForTeamCity(ex.ToString()));
+                _teamCityWriter.WriteError("TeamCity Logger Error", ex.ToString());
             }
         }
 
@@ -69,53 +75,29 @@ namespace VSTest.TeamCityLogger
                 if (_currentAssembly != currentAssembly)
                 {
                     if (!string.IsNullOrEmpty(_currentAssembly))
-                        Console.WriteLine("##teamcity[testSuiteFinished name='{0}']", _currentAssembly);
+                        _currentAssemblySuite.Dispose();
 
                     _currentAssembly = currentAssembly;
-
-                    Console.WriteLine("##teamcity[testSuiteStarted name='{0}']", currentAssembly);
+                    _currentAssemblySuite = _vsTestSuite.OpenTestSuite(_currentAssembly);
                 }
 
-                string name = e.Result.TestCase.FullyQualifiedName;
-
-                Console.WriteLine("##teamcity[testStarted name='{0}' captureStandardOutput='true']", name);
-
-                if (e.Result.Outcome == TestOutcome.Skipped)
+                using (var currentTest = _currentAssemblySuite.OpenTest(e.Result.TestCase.FullyQualifiedName))
                 {
-                    Console.WriteLine("##teamcity[testIgnored name='{0}' message='{1}']", name, FormatForTeamCity(e.Result.ErrorMessage));
+                    if (e.Result.Outcome == TestOutcome.Skipped)
+                    {
+                        currentTest.WriteIgnored(e.Result.ErrorMessage);
+                    }
+                    else if (e.Result.Outcome == TestOutcome.Failed)
+                    {
+                        currentTest.WriteFailed(e.Result.ErrorMessage, e.Result.ErrorStackTrace);
+                    }
+                    currentTest.WriteDuration(e.Result.Duration);
                 }
-                else if (e.Result.Outcome == TestOutcome.Failed)
-                {
-                    var errorStackTrace = FormatForTeamCity(e.Result.ErrorStackTrace);
-                    Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}' details='{2}']", name, FormatForTeamCity(e.Result.ErrorMessage), errorStackTrace);
-                }
-                else if (e.Result.Outcome == TestOutcome.Passed)
-                {
-                }
-
-                Console.WriteLine("##teamcity[testFinished name='{0}' duration='{1}']", name, e.Result.Duration.TotalMilliseconds);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("##teamcity[message text='TeamCity Logger Error' errorDetails='{0}' status='ERROR']", FormatForTeamCity(ex.ToString()));
+                _teamCityWriter.WriteError("TeamCity Logger Error", ex.ToString());
             }
-        }
-
-        private static string FormatForTeamCity(string errorStackTrace)
-        {
-            if (errorStackTrace == null)
-                return null;
-
-            return errorStackTrace
-                .Replace("|", "||")
-                .Replace("\r", "|r")
-                .Replace("\n", "|n")
-                .Replace("'", "|'")
-                .Replace(X, "|x")
-                .Replace(L, "|l")
-                .Replace(P, "|p")
-                .Replace("[", "|[")
-                .Replace("]", "|]");
         }
 
         /// <summary>
@@ -123,13 +105,15 @@ namespace VSTest.TeamCityLogger
         /// </summary>
         private void TestRunCompleteHandler(object sender, TestRunCompleteEventArgs e)
         {
-            Console.WriteLine("##teamcity[testSuiteFinished name='{0}']", _currentAssembly);
-            Console.WriteLine("##teamcity[testSuiteFinished name='VSTest']");
+            if (_currentAssemblySuite != null) _currentAssemblySuite.Dispose();
+            _vsTestSuite.Dispose();
 
-            Console.WriteLine("Total Executed: {0}", e.TestRunStatistics.ExecutedTests);
-            Console.WriteLine("Total Passed: {0}", e.TestRunStatistics[TestOutcome.Passed]);
-            Console.WriteLine("Total Failed: {0}", e.TestRunStatistics[TestOutcome.Failed]);
-            Console.WriteLine("Total Skipped: {0}", e.TestRunStatistics[TestOutcome.Skipped]);
+            _teamCityWriter.Dispose();
+
+            Trace.WriteLine(string.Format("Total Executed: {0}", e.TestRunStatistics.ExecutedTests));
+            Trace.WriteLine(string.Format("Total Passed: {0}", e.TestRunStatistics[TestOutcome.Passed]));
+            Trace.WriteLine(string.Format("Total Failed: {0}", e.TestRunStatistics[TestOutcome.Failed]));
+            Trace.WriteLine(string.Format("Total Skipped: {0}", e.TestRunStatistics[TestOutcome.Skipped]));
         }
     }
 }
