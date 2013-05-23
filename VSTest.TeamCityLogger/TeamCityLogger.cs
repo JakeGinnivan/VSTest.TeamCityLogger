@@ -16,7 +16,6 @@ namespace VSTest.TeamCityLogger
         private ITeamCityWriter _teamCityWriter;
         private ITeamCityTestsSubWriter _vsTestSuite;
         private ITeamCityTestsSubWriter _currentAssemblySuite;
-        private ITeamCityTestWriter _currentTest;
 
         public TeamCityLogger()
         {
@@ -49,12 +48,13 @@ namespace VSTest.TeamCityLogger
                 switch (e.Level)
                 {
                     case TestMessageLevel.Informational:
-                    case TestMessageLevel.Warning:
-                        _currentTest.WriteStdOutput(e.Message);
+                        _teamCityWriter.WriteMessage(e.Message);
                         break;
-
+                    case TestMessageLevel.Warning:
+                        _teamCityWriter.WriteWarning(e.Message);
+                        break;
                     case TestMessageLevel.Error:
-                        _currentTest.WriteErrOutput(e.Message);
+                        _teamCityWriter.WriteError(e.Message);
                         break;
                 }
             }
@@ -81,17 +81,17 @@ namespace VSTest.TeamCityLogger
                     _currentAssemblySuite = _vsTestSuite.OpenTestSuite(_currentAssembly);
                 }
 
-                using (_currentTest = _currentAssemblySuite.OpenTest(e.Result.TestCase.FullyQualifiedName))
+                using (var currentTest = _currentAssemblySuite.OpenTest(e.Result.TestCase.FullyQualifiedName))
                 {
                     if (e.Result.Outcome == TestOutcome.Skipped)
                     {
-                        _currentTest.WriteIgnored(e.Result.ErrorMessage);
+                        currentTest.WriteIgnored(e.Result.ErrorMessage);
                     }
                     else if (e.Result.Outcome == TestOutcome.Failed)
                     {
-                        _currentTest.WriteFailed(e.Result.ErrorMessage, e.Result.ErrorStackTrace);
+                        currentTest.WriteFailed(e.Result.ErrorMessage, e.Result.ErrorStackTrace);
                     }
-                    _currentTest.WriteDuration(e.Result.Duration);
+                    currentTest.WriteDuration(e.Result.Duration);
                 }
             }
             catch (Exception ex)
