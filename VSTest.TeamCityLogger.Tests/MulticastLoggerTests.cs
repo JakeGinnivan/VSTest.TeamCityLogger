@@ -16,15 +16,32 @@ namespace VSTest.TeamCityLogger.Tests
             logger.Initialize(Substitute.For<TestLoggerEvents>(), new Dictionary<string, string>
             {
                 {"logger1", "Test"},
-                {"logger1.parameter", "some parameter"}
+                {"logger1.parameter", "some parameter"},
+                {MulticastLogger.Testrundirectory, "c:\\TestRunDir"}
             });
 
             Assert.True(TestLogger.Parameters.ContainsKey("parameter"));
         }
 
+        [Fact]
+        public void passes_test_run_dir_to_other_loggers_with_parameters()
+        {
+            var logger = new MulticastLogger();
+            const string runDir = "c:\\TestRunDir";
+
+            logger.Initialize(Substitute.For<TestLoggerEvents>(), new Dictionary<string, string>
+            {
+                {"logger1", "Test"},
+                {MulticastLogger.Testrundirectory, runDir}
+            });
+
+            Assert.True(TestLogger.Parameters.ContainsKey(MulticastLogger.Testrundirectory));
+            Assert.Equal(runDir, TestLogger.Parameters[MulticastLogger.Testrundirectory]);
+        }
+
         [ExtensionUri("logger://TestLogger")]
         [FriendlyName("Test")]
-        class TestLogger : ITestLoggerWithParameters
+        internal class TestLogger : ITestLoggerWithParameters
         {
             public static Dictionary<string, string> Parameters;
 

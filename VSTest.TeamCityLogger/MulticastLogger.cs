@@ -10,6 +10,7 @@ namespace VSTest.TeamCityLogger
     [FriendlyName("Multicast")]
     public class MulticastLogger : ITestLoggerWithParameters
     {
+        internal const string Testrundirectory = "TestRunDirectory";
         private readonly PossibleLogger[] _loggers;
 
         public MulticastLogger()
@@ -29,7 +30,7 @@ namespace VSTest.TeamCityLogger
 
         public void Initialize(TestLoggerEvents events, Dictionary<string, string> parameters)
         {
-            var loggers = parameters.Where(p => p.Key.StartsWith("logger", StringComparison.InvariantCultureIgnoreCase) && !p.Key.Contains("."));
+            var loggers = parameters.Where(p => !p.Key.Contains(".") && p.Key != Testrundirectory);
 
             foreach (var keyValuePair in loggers)
             {
@@ -48,7 +49,7 @@ namespace VSTest.TeamCityLogger
                 }
                 else
                 {
-                    loggerInstance.Initialize(events, parameters["TestRunDirectory"]);
+                    loggerInstance.Initialize(events, parameters[Testrundirectory]);
                 }
             }
         }
@@ -65,14 +66,16 @@ namespace VSTest.TeamCityLogger
 
         private Dictionary<string, string> GetParametersFor(string loggerName, Dictionary<string, string> parameters)
         {
-            return (from parameter in parameters
-                where parameter.Key.StartsWith(loggerName) && parameter.Key != loggerName
+            var parametersForLogger = (from parameter in parameters
+                where parameter.Key.Contains(".") && parameter.Key.Split('.')[0] == loggerName
                 let loggerParameter = parameter.Key.Split('.')[1]
                 select new
                 {
-                    parameter,
-                    loggerParameter
-                }).ToDictionary(k => k.loggerParameter, k => k.parameter.Value);
+                    key = loggerParameter,
+                    value = parameter.Value
+                }).ToDictionary(k => k.key, k => k.value);
+            parametersForLogger.Add(Testrundirectory, parameters[Testrundirectory]);
+            return parametersForLogger;
         }
     }
 }
