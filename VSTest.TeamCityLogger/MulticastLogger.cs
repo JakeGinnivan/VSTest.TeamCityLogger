@@ -10,6 +10,7 @@ namespace VSTest.TeamCityLogger
     [FriendlyName("Multicast")]
     public class MulticastLogger : ITestLoggerWithParameters
     {
+        internal const string Testrundirectory = "TestRunDirectory";
         private readonly PossibleLogger[] _loggers;
 
         public MulticastLogger()
@@ -29,7 +30,10 @@ namespace VSTest.TeamCityLogger
 
         public void Initialize(TestLoggerEvents events, Dictionary<string, string> parameters)
         {
-            var loggers = parameters.Where(p => p.Key.StartsWith("logger", StringComparison.InvariantCultureIgnoreCase) && !p.Key.Contains("."));
+            var loggersParameter = parameters.Keys.SingleOrDefault(k => string.Equals("loggers", k, StringComparison.InvariantCultureIgnoreCase));
+            var loggers = loggersParameter == null ?
+                parameters.Where(p => !p.Key.Contains(".") && p.Key != Testrundirectory) :
+                parameters[loggersParameter].Split(',').Select(l => new KeyValuePair<string, string>(l, l));
 
             foreach (var keyValuePair in loggers)
             {
@@ -48,14 +52,14 @@ namespace VSTest.TeamCityLogger
                 }
                 else
                 {
-                    loggerInstance.Initialize(events, parameters["TestRunDirectory"]);
+                    loggerInstance.Initialize(events, parameters[Testrundirectory]);
                 }
             }
         }
 
         private bool LoggerUrlMatches(PossibleLogger l, string loggerName)
         {
-            return l.ExtensionUri != null && string.Equals(l.ExtensionUri.ExtensionUri, loggerName, StringComparison.InvariantCultureIgnoreCase);            
+            return l.ExtensionUri != null && string.Equals(l.ExtensionUri.ExtensionUri, loggerName, StringComparison.InvariantCultureIgnoreCase);
         }
 
         private static bool FriendlyNameMatches(PossibleLogger l, string loggerName)
@@ -65,14 +69,16 @@ namespace VSTest.TeamCityLogger
 
         private Dictionary<string, string> GetParametersFor(string loggerName, Dictionary<string, string> parameters)
         {
-            return (from parameter in parameters
-                where parameter.Key.StartsWith(loggerName) && parameter.Key != loggerName
-                let loggerParameter = parameter.Key.Split('.')[1]
-                select new
-                {
-                    parameter,
-                    loggerParameter
-                }).ToDictionary(k => k.loggerParameter, k => k.parameter.Value);
+            var parametersForLogger = (from parameter in parameters
+                                       where parameter.Key.Contains(".") && parameter.Key.Split('.')[0] == loggerName
+                                       let loggerParameter = parameter.Key.Split('.')[1]
+                                       select new
+                                       {
+                                           key = loggerParameter,
+                                           value = parameter.Value
+                                       }).ToDictionary(k => k.key, k => k.value);
+            parametersForLogger.Add(Testrundirectory, parameters[Testrundirectory]);
+            return parametersForLogger;
         }
     }
 }
