@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Root>$(MSBuildProjectDirectory)\</Root>
+    <BuildPlatform Condition="$(BuildPlatform) == ''">Any CPU</BuildPlatform>
+    <Configuration Condition="$(Configuration) == ''">Release</Configuration>
+  </PropertyGroup>
+
+  <Target Name="Cleanup">
+    <Error Condition="$(Root) == ''" Text="Root variable must be defined" />
+
+    <!-- Diagnostics -->
+    <Message Text="Diagnostics:"/>
+    <Message Text="Project root:    $(Root)" />
+    <Message Text="Drop path:       build\Artifacts" />
+
+    <!-- Clean up -->
+    <ItemGroup>
+      <FilesToDelete Include="$(Root)**\bin\**\*.*" />
+      <FilesToDelete Include="$(Root)**\obj\**\*.*" />
+      <FilesToDelete Include="$(Root)build\Artifacts\**\*.*" />
+    </ItemGroup>
+    <Delete Files="@(FilesToDelete)" ContinueOnError="true" />
+    <Delete Files="$(Root)build\Artifacts" />
+  </Target>
+  
+  <Target Name="Build" DependsOnTargets="Cleanup">
+    <Exec Command="scriptcs &quot;$(Root)UpdateVsixVersion.csx&quot;" />
+    
+    <MSBuild Projects="$(Root)VSTest.TeamCityLogger.sln" Properties="Configuration=$(Configuration);Platform=$(BuildPlatform)" />
+  </Target>
+</Project>
