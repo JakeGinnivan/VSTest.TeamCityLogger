@@ -10,6 +10,8 @@ Enables TeamCity to display output when tests are run through VSTest.console.exe
 Put VSTest.TeamCityLogger into `C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\CommonExtensions\Microsoft\TestWindow\Extensions`
 
     vstest.console.exe tests.dll /logger:TeamCity
+    
+You can also install the Vsix at http://visualstudiogallery.msdn.microsoft.com/f90ad2c1-ee11-4594-a543-a92a8ba62c1b then use the /UseVsixExtensions switch to make VSTest discover the logger
 
 If you would like to use another logger in conjunction with the TeamCityLogger you can use the MulticastLogger!
 
