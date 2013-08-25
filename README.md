@@ -27,4 +27,4 @@ You may also alias loggers, then you can set parameters on the aliases:
 You can grab the extension straight off the build server:
 
 [CI Build](http://teamcity.ginnivan.net/viewType.html?buildTypeId=bt47)  
-[Latest Build Output (VSTest.TeamCityLogger.dll)](http://teamcity.ginnivan.net/repository/download/bt47/.lastSuccessful/VSTest.TeamCityLogger.dll)
+[Latest Build Output (VSTest.TeamCityLogger.dll)](http://teamcity.ginnivan.net/repository/download/bt47/.lastSuccessful/VSTest.TeamCityLogger.zip)
